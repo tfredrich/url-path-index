@@ -7,7 +7,7 @@ import java.util.StringJoiner;
 
 class SearchResults<T>
 {
-	private String requestedPath;
+	private String path;
 	private List<String> segments;
 	private boolean success = true;
 	private Map<String, String> identifiers;
@@ -16,10 +16,22 @@ class SearchResults<T>
 	public SearchResults(String path)
 	{
 		super();
-		this.requestedPath = path;
+		this.path = path;
+		setFailed();
 	}
 
-	public void setFailed()
+	public SearchResults(String path, List<String> segments, Map<String, String> identifiers, T object, boolean success)
+	{
+		super();
+		this.path = path;
+
+		if (segments != null) segments.stream().forEach(this::addSegment);
+		if (identifiers != null) identifiers.entrySet().stream().forEach(e -> addIdentifier(e.getKey(), e.getValue()));
+		setObject(object);
+		this.success = success;
+	}
+
+	protected void setFailed()
 	{
 		this.success = false;
 	}
@@ -29,7 +41,7 @@ class SearchResults<T>
 		return success;
 	}
 
-	public void addSegment(String segment)
+	protected void addSegment(String segment)
 	{
 		if (segments == null)
 		{
@@ -39,7 +51,7 @@ class SearchResults<T>
 		segments.add(segment);
 	}
 
-	public void addIdentifier(String parameterName, String segment)
+	protected void addIdentifier(String parameterName, String segment)
 	{
 		addSegment(parameterName);
 
@@ -71,7 +83,12 @@ class SearchResults<T>
 		return (object != null);
 	}
 
-	public void setObject(T object)
+	public String getPath()
+	{
+		return path;
+	}
+
+	protected void setObject(T object)
 	{
 		this.object = object;
 	}
@@ -79,7 +96,7 @@ class SearchResults<T>
 	@Override
 	public String toString()
 	{
-		StringBuilder sb = new StringBuilder(requestedPath);
+		StringBuilder sb = new StringBuilder(path);
 		sb.append(": ");
 
 		if (matched())
