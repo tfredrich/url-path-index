@@ -9,7 +9,7 @@ class PathIndexTest
 	@Test
 	void test()
 	{
-		PathIndex<Object> trie = new PathIndex<>();
+		PathIndex<String> trie = new PathIndex<>();
 
 		// Inserting some sample URLs into the trie
 		trie.insert("/fee/fi/fo/fum", "I smell the blood of an Englishman!");
@@ -25,7 +25,7 @@ class PathIndexTest
 		trie.insert("/accounts/{accountId}/products/{productId}/reviews", "account-product-reviews");
 
 		// Searching for and printing matched URLs
-		SearchResults<Object> results = trie.search("/fee/fi/fo/fum");
+		SearchResults<String> results = trie.search("/fee/fi/fo/fum");
 		assertTrue(results.matched());
 		assertEquals("I smell the blood of an Englishman!", results.getObject());
 		assertFalse(results.hasIdentifiers());

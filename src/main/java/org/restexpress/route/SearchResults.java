@@ -17,7 +17,6 @@ class SearchResults<T>
 	{
 		super();
 		this.path = path;
-		setFailed();
 	}
 
 	public SearchResults(String path, List<String> segments, Map<String, String> identifiers, T object, boolean success)
