@@ -30,7 +30,7 @@ SearchResults<String> results = trie.search("/accounts/1234/products/4567/review
 if (results.matched()) {
 	String accountId = results.getIdentifier("accountId");	// "1234"
 	String productId = results.getIdentifier("productId");	// "4567"
-	String indexedObject = results.getObject();				// "account-product-reviews"
+	String indexedObject = results.getObject();	// "account-product-reviews"
 }
 else {
 	// perform matching failure logic here.
