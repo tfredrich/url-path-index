@@ -3,7 +3,7 @@ An in-memory trie index for URL segments with nanosecond response times for 1000
 
 A successful search returns the individual URL segments and identifiers along with the indexed object. Failure is indicated by `SearchResults.matched()` returning false.
 
-Currently, on my M1 Mac Mini, performance benchmarks show that searches take less than 300 nanoseconds when conducting 100 million searches across approximately 1000 URLs.
+Currently, on my M1 Mac Mini, performance benchmarks show that searches take less than 300 **nano**seconds when conducting 100 million searches across approximately 1000 URLs.
 
 ## Usage
 
