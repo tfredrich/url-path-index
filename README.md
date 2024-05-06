@@ -1,5 +1,5 @@
 # url-trie-index
-A trie index for URL segments with nanosecond response times for 1000s of URLs. A successful search returns URL segments and identifiers along with the indexed object.
+An in-memory trie index for URL segments with nanosecond response times for 1000s of URLs. A successful search returns URL segments and identifiers along with the indexed object.
 
 ## Usage
 
