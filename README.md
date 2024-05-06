@@ -1,5 +1,7 @@
 # url-trie-index
-An in-memory trie index for URL segments with nanosecond response times for 1000s of URLs. A successful search returns URL segments and identifiers along with the indexed object.
+An in-memory trie index for URL segments with nanosecond response times for 1000s of URLs. This builds a semi-static prefix index of URL segments, including identifier segments, to process an incoming URL to parse the segments and identifiers from it and return an indexed object (such as routing metadata for the HTTP methods).
+
+A successful search returns the individual URL segments and identifiers along with the indexed object. Failure is indicated by `SearchResults.matched()` returning false.
 
 ## Usage
 
