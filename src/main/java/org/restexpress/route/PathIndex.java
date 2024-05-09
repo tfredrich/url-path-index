@@ -49,6 +49,8 @@ public class PathIndex<T>
 		for (String segment : Arrays.asList(pathSegments))
 		{
 			// This accounts for a leading slash ('/') on the path that creates an empty segment in the array.
+			// It will also skip any empty segments caused by multiple slashes in the path. Which may or may not be desirable.
+			// It could be fixed by changing the asPathSegments method to remove the leading slash before splitting.
 			if (segment.isBlank()) continue;
 
 			currentNode = traverse(currentNode, segment);
