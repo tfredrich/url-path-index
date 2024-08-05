@@ -1,15 +1,17 @@
 package org.restexpress.route;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.restexpress.route.operation.HttpMethod;
+import org.restexpress.route.operation.MethodNotAllowedError;
+import org.restexpress.route.operation.NotFoundError;
 import org.restexpress.route.operation.Operation;
 import org.restexpress.route.operation.OperationIndex;
+import org.restexpress.route.operation.UnsupportedMediaTypeError;
 
 class OperationIndexTest
 {
@@ -40,34 +42,44 @@ class OperationIndexTest
 		index.insert("/accounts/{accountId}/products/{productId}/reviews", new Operation(COLLECTION).setOriginUrl("https://127.0.0.1/internal/accounts/{accountId}/products/{productId}/reviews"));
 
 		// Searching for and printing matched URLs
-		assertSucceeds(index, "/fee/fi/fo/fum", HttpMethod.GET, null, ITEM, false);
-		assertSucceeds(index, "/fee/fi/fo/fum", HttpMethod.GET, JSON, ITEM, false);
-		assertSucceeds(index, "/fee/fi/fo/fum", HttpMethod.DELETE, JSON, ITEM, false);
-		assertSucceeds(index, "/accounts", HttpMethod.GET, JSON, COLLECTION, false);
-		assertSucceeds(index, "/accounts/1234", HttpMethod.PUT, JSON, ITEM, true);
-        assertSucceeds(index, "/accounts/1234/products", HttpMethod.POST, JSON, COLLECTION, true);
-        assertSucceeds(index, "/accounts/1234/products/4567", HttpMethod.GET, JSON, ITEM, true);
-        assertSucceeds(index, "/accounts/1234/products/4567/reviews", HttpMethod.GET, JSON, COLLECTION, true);
-        assertSucceeds(index, "/users/1234/posts", HttpMethod.GET, JSON, COLLECTION, true);
-        assertSucceeds(index, "/usages/1234/details", HttpMethod.GET, JSON, COLLECTION, true);
-        assertSucceeds(index, "/products/1234/reviews", HttpMethod.GET, JSON, COLLECTION, true);
-        assertSucceeds(index, "/products/1234/reviews/", HttpMethod.GET, JSON, COLLECTION, true);
+		assertSucceeds(index, "/fee/fi/fo/fum", HttpMethod.GET, null, false);
+		assertSucceeds(index, "/fee/fi/fo/fum", HttpMethod.GET, JSON, false);
+		assertSucceeds(index, "/fee/fi/fo/fum", HttpMethod.DELETE, JSON, false);
+		assertSucceeds(index, "/accounts", HttpMethod.GET, JSON, false);
+		assertSucceeds(index, "/accounts/1234", HttpMethod.PUT, JSON, true);
+        assertSucceeds(index, "/accounts/1234/products", HttpMethod.POST, JSON, true);
+        assertSucceeds(index, "/accounts/1234/products/4567", HttpMethod.GET, JSON, true);
+        assertSucceeds(index, "/accounts/1234/products/4567/reviews", HttpMethod.GET, JSON, true);
+        assertSucceeds(index, "/users/1234/posts", HttpMethod.GET, JSON, true);
+        assertSucceeds(index, "/usages/1234/details", HttpMethod.GET, JSON, true);
+        assertSucceeds(index, "/products/1234/reviews", HttpMethod.GET, JSON, true);
+        assertSucceeds(index, "/products/1234/reviews/", HttpMethod.GET, JSON, true);
 
-		assertFails(index, "/ / / ", HttpMethod.GET, JSON);
-		assertFails(index, "/feefifofum", HttpMethod.GET, JSON);
-		assertFails(index, "/accounts1234", HttpMethod.GET, JSON);
-		assertFails(index, "/users/1234", HttpMethod.GET, JSON);
-		assertFails(index, "/usages/1234", HttpMethod.GET, JSON);
-		assertFails(index, "/usage/1234", HttpMethod.GET, JSON);
-		assertFails(index, "/accounts/1234/details", HttpMethod.GET, JSON);
+        // Not Found exceptions
+		assertNotFound(index, "/ / / ", HttpMethod.GET, JSON);
+		assertNotFound(index, "/feefifofum", HttpMethod.GET, JSON);
+		assertNotFound(index, "/accounts1234", HttpMethod.GET, JSON);
+		assertNotFound(index, "/users/1234", HttpMethod.GET, JSON);
+		assertNotFound(index, "/usages/1234", HttpMethod.GET, JSON);
+		assertNotFound(index, "/usage/1234", HttpMethod.GET, JSON);
+		assertNotFound(index, "/accounts/1234/details", HttpMethod.GET, JSON);
+
+		// Method Not Allowed exceptions
+		assertMethodNotAllowed(index, "/fee/fi/fo/fum", HttpMethod.POST, JSON);
+		assertMethodNotAllowed(index, "/accounts/1234", HttpMethod.POST, JSON);
+		assertMethodNotAllowed(index, "/accounts/1234/products", HttpMethod.PUT, JSON);
+
+		// Unsupported Media Type exceptions
+		assertUnsupportedMediaType(index, "/fee/fi/fo/fum", HttpMethod.GET, "application/xml");
+		assertUnsupportedMediaType(index, "/accounts/1234", HttpMethod.GET, "application/xml");
+		assertUnsupportedMediaType(index, "/accounts/1234/products", HttpMethod.GET, "application/xml");
 	}
 
-	private void assertSucceeds(OperationIndex index, String path, HttpMethod method, String mediaType, Operation expectedOperation, boolean hasIdentifiers)
+	private void assertSucceeds(OperationIndex index, String path, HttpMethod method, String mediaType, boolean hasIdentifiers)
 	{
 		SearchResults<Operation> results = index.search(path, method, mediaType);
 		assertTrue(results.matched());
 		Operation operation = results.getObject();
-//		assertEquals(expectedOperation, operation);
 		assertEquals(method, operation.getMethod(method).getMethod());
 		assertEquals(normalizePath("https://127.0.0.1/internal" + path), operation.getOriginUrl().toString());
 		assertEquals(hasIdentifiers, results.hasIdentifiers());		
@@ -83,14 +95,36 @@ class OperationIndexTest
 	    return path;
 	}
 
-	private void assertFails(OperationIndex index, String path, HttpMethod method, String mediaType)
+	private void assertNotFound(OperationIndex index, String path, HttpMethod method, String mediaType)
 	{
 		try {
 			index.search(path, method, mediaType);
-		} catch (Exception e) {
+		} catch (NotFoundError e) {
 			return;
 		}
 
-		throw new AssertionError("Expected search to fail.");
+		throw new AssertionError("Expected NotFoundError.");
+	}
+
+	private void assertMethodNotAllowed(OperationIndex index, String path, HttpMethod method, String mediaType)
+	{
+		try {
+			index.search(path, method, mediaType);
+		} catch (MethodNotAllowedError e) {
+			return;
+		}
+
+		throw new AssertionError("Expected MethodNotAllowedError.");
+	}
+
+	private void assertUnsupportedMediaType(OperationIndex index, String path, HttpMethod method, String mediaType)
+	{
+		try {
+			index.search(path, method, mediaType);
+		} catch (UnsupportedMediaTypeError e) {
+			return;
+		}
+
+		throw new AssertionError("Expected UnsupportedMediaTypeError.");
 	}
 }
