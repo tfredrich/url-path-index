@@ -11,7 +11,7 @@ class PathIndexTest
 	{
 		PathIndex<String> trie = new PathIndex<>();
 
-		// Inserting some sample URLs into the trie
+		// Inserting some sample URLs into the index.
 		trie.insert("/fee/fi/fo/fum", "I smell the blood of an Englishman!");
 		trie.insert("/users/{userId}/posts", "user-posts");
 		trie.insert("/usages/{usageId}/details", "usage-details");

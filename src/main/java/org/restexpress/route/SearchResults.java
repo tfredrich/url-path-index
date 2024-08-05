@@ -1,16 +1,26 @@
 package org.restexpress.route;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-class SearchResults<T>
+public class SearchResults<T>
 {
+	// The path that was requested.
 	private String path;
+
+	// The segments that were extracted from the requested path
 	private List<String> segments;
+
+	// Whether the path matched or not.
 	private boolean success = true;
+
+	// The identifiers that were extracted from the requested path.
 	private Map<String, String> identifiers;
+
+	// The object that was indexed at the end of the path.
 	private T object;
 
 	public SearchResults(String path)
@@ -72,12 +82,17 @@ class SearchResults<T>
 		return (identifiers != null);
 	}
 
+	public Map<String, String> getIdentifiers()
+    {
+        return (hasIdentifiers() ? Collections.unmodifiableMap(identifiers) : Collections.emptyMap());
+    }
+
 	public T getObject()
 	{
 		return object;
 	}
 
-	public boolean hasIndexedObject()
+	public boolean hasObject()
 	{
 		return (object != null);
 	}
@@ -110,7 +125,7 @@ class SearchResults<T>
 				sb.append(identifiers.toString());
 			}
 
-			if (hasIndexedObject())
+			if (hasObject())
 			{
 				sb.append(" (");
 				sb.append(getObject().toString());

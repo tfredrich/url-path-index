@@ -2,6 +2,13 @@ package org.restexpress.route;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * PathSegment is a node in a tree structure representing a segment in the URI path. It can have
+ * children nodes, and it can be a leaf node, in which case it holds an object that is indexed by
+ * the path name.
+ * 
+ * @param <T> the type of object that is indexed/stored in this segment of the path.
+ */
 class PathSegment<T>
 {
 	private String segment;
