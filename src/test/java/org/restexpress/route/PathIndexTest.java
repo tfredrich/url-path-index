@@ -1,54 +1,81 @@
 package org.restexpress.route;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class PathIndexTest
 {
-	@Test
-	void test()
+	private PathIndex<String> index = new PathIndex<>();
+
+	@BeforeEach
+	void setUp()
 	{
-		PathIndex<String> trie = new PathIndex<>();
+		index.insert("/fee/fi/fo/fum", "I smell the blood of an Englishman!");
+		index.insert("/users/{userId}/posts", "user-posts");
+		index.insert("/usages/{usageId}/details", "usage-details");
+		index.insert("/products/{productId}/reviews", "product-reviews1");
+		index.insert("/products/{productId}/reviews/", "product-reviews2");
+		index.insert("/products/{productId}/reviews/", "product-reviews3");
+		index.insert("/accounts", "account-collection");
+		index.insert("/accounts/{accountId}", "an-account");
+		index.insert("/accounts/{accountId}/products", "account-products");
+		index.insert("/accounts/{accountId}/products/{productId}", "one-account-product");
+		index.insert("/accounts/{accountId}/products/{productId}/reviews", "account-product-reviews");
+	}
 
-		// Inserting some sample URLs into the index.
-		trie.insert("/fee/fi/fo/fum", "I smell the blood of an Englishman!");
-		trie.insert("/users/{userId}/posts", "user-posts");
-		trie.insert("/usages/{usageId}/details", "usage-details");
-		trie.insert("/products/{productId}/reviews", "product-reviews1");
-		trie.insert("/products/{productId}/reviews/", "product-reviews2");
-		trie.insert("/products/{productId}/reviews/", "product-reviews3");
-		trie.insert("/accounts", "account-collection");
-		trie.insert("/accounts/{accountId}", "an-account");
-		trie.insert("/accounts/{accountId}/products", "account-products");
-		trie.insert("/accounts/{accountId}/products/{productId}", "one-account-product");
-		trie.insert("/accounts/{accountId}/products/{productId}/reviews", "account-product-reviews");
+	@Test
+	void shouldMatch()
+	{
+		assertSucceeds("/fee/fi/fo/fum", "I smell the blood of an Englishman!", null);
+		assertSucceeds("/accounts", "account-collection", null);
+		assertSucceeds("/accounts/1234", "an-account", Map.of("{accountId}", "1234"));
+        assertSucceeds("/accounts/1234/products", "account-products", Map.of("{accountId}", "1234"));
+        assertSucceeds("/accounts/1234/products/4567", "one-account-product", Map.of("{accountId}", "1234", "{productId}", "4567"));
+        assertSucceeds("/accounts/1234/products/4567/reviews", "account-product-reviews", Map.of("{accountId}", "1234", "{productId}", "4567"));
+        assertSucceeds("/users/1234/posts", "user-posts", Map.of("{userId}", "1234"));
+        assertSucceeds("/usages/1234/details", "usage-details", Map.of("{usageId}", "1234"));
+        assertSucceeds("/products/1234/reviews", "product-reviews3", Map.of("{productId}", "1234"));
+        assertSucceeds("/products/1234/reviews/", "product-reviews3", Map.of("{productId}", "1234"));
+	}
 
-		// Searching for and printing matched URLs
-		SearchResults<String> results = trie.search("/fee/fi/fo/fum");
+	@Test
+	void shouldFail()
+	{
+        assertFails("/ / / ");
+		assertFails("/feefifofum");
+		assertFails("/accounts1234");
+		assertFails("/users/1234");
+		assertFails("/usages/1234");
+		assertFails("/usage/1234");
+		assertFails("/accounts/1234/details");
+	}
+
+	private void assertSucceeds(String path, String value, Map<String, String> parameters)
+	{
+		SearchResults<String> results = index.search(path);
 		assertTrue(results.matched());
-		assertEquals("I smell the blood of an Englishman!", results.getObject());
-		assertFalse(results.hasIdentifiers());
-		System.out.println("Should Succeed:");
-		System.out.println(trie.search("/fee/fi/fo/fum"));
-		System.out.println(trie.search("/accounts"));
-		System.out.println(trie.search("/accounts/1234"));
-		System.out.println(trie.search("/accounts/1234/products"));
-		System.out.println(trie.search("/accounts/1234/products/4567"));
-		System.out.println(trie.search("/accounts/1234/products/4567/reviews"));
-		System.out.println(trie.search("/users/1234/posts"));
-		System.out.println(trie.search("/usages/1234/details"));
-		System.out.println(trie.search("/products/1234/reviews"));
-		System.out.println(trie.search("/products/1234/reviews/"));
-		System.out.println();
-		System.out.println("Should Fail:");
-		assertFalse(trie.search("/ / / ").matched());
-		System.out.println(trie.search("/ / / "));
-		System.out.println(trie.search("/feefifofum"));
-		System.out.println(trie.search("/accounts1234"));
-		System.out.println(trie.search("/users/1234"));
-		System.out.println(trie.search("/usages/1234"));
-		System.out.println(trie.search("/usage/1234"));
-		System.out.println(trie.search("/accounts/1234/details"));
+		assertEquals(value, results.getObject());
+
+		if (parameters != null)
+		{
+			assertTrue(results.hasIdentifiers());
+			assertEquals(parameters, results.getIdentifiers());
+		}
+		else
+		{
+			assertFalse(results.hasIdentifiers());
+		}
+	}
+
+	private void assertFails(String path)
+	{
+		SearchResults<String> results = index.search(path);
+		assertFalse(results.matched());
 	}
 }
